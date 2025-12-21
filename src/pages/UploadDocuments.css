@@ -1,0 +1,241 @@
+.upload-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+}
+
+.upload-main {
+  flex: 1;
+  padding: var(--spacing-2xl) 0;
+}
+
+.upload-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.upload-header {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.upload-header h1 {
+  margin-bottom: var(--spacing-sm);
+}
+
+.upload-sections {
+  display: grid;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.upload-section {
+  padding: var(--spacing-xl);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-lg);
+  gap: var(--spacing-md);
+}
+
+.section-header h3 {
+  margin-bottom: var(--spacing-xs);
+}
+
+.upload-zone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-2xl);
+  text-align: center;
+  background-color: var(--color-background);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.upload-zone:hover {
+  border-color: var(--color-primary);
+  background-color: rgba(139, 47, 91, 0.02);
+}
+
+.upload-zone.drag-active {
+  border-color: var(--color-primary);
+  background-color: rgba(139, 47, 91, 0.05);
+  transform: scale(1.01);
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+}
+
+.upload-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-sm);
+  opacity: 0.6;
+}
+
+.upload-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.upload-hint {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+.file-list {
+  margin-top: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.file-item:hover {
+  border-color: var(--color-primary-lighter);
+  box-shadow: var(--shadow-sm);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex: 1;
+  min-width: 0;
+}
+
+.file-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.file-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: 0;
+  flex: 1;
+}
+
+.file-name {
+  font-weight: 500;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+.file-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  width: 200px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background-color: var(--color-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  min-width: 40px;
+  text-align: right;
+}
+
+.btn-remove {
+  background: none;
+  border: none;
+  color: var(--color-text-lighter);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.btn-remove:hover {
+  background-color: rgba(229, 62, 62, 0.1);
+  color: var(--color-error);
+}
+
+.upload-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 768px) {
+  .upload-container {
+    max-width: 100%;
+  }
+
+  .upload-section {
+    padding: var(--spacing-lg);
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .upload-zone {
+    padding: var(--spacing-lg);
+  }
+
+  .file-progress {
+    width: 150px;
+  }
+
+  .upload-actions {
+    flex-direction: column-reverse;
+  }
+
+  .upload-actions button {
+    width: 100%;
+  }
+}
