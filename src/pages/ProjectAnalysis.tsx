@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { mockComplianceChecks, mockBuildingCodes, mockStandards } from '../data/mockData';
+import { analyzeCompliance } from '../services/claudeService';
+import { mockBuildingCodes, mockStandards, mockProjects } from '../data/mockData';
 import type { ComplianceCheck } from '../types';
 import './ProjectAnalysis.css';
 
@@ -11,191 +12,155 @@ const ProjectAnalysis = () => {
   const { projectId } = useParams();
   const [processing, setProcessing] = useState(true);
   const [progress, setProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState('Extracting document data...');
+  const [currentStep, setCurrentStep] = useState('Initialising analysis engine…');
   const [complianceChecks, setComplianceChecks] = useState<ComplianceCheck[]>([]);
+  const [activeFilter, setActiveFilter] = useState<'all' | ComplianceCheck['status']>('all');
+  const hasRun = useRef(false);
+
+  const project = mockProjects.find(p => p.id === projectId) ?? mockProjects[0];
 
   useEffect(() => {
-    // Simulate processing steps
-    const steps = [
-      { text: 'Extracting document data...', duration: 2000 },
-      { text: 'Querying building codes database...', duration: 2500 },
-      { text: 'Analyzing compliance requirements...', duration: 2000 },
-      { text: 'Cross-referencing historical data...', duration: 2000 },
-      { text: 'Generating feedback report...', duration: 1500 },
-    ];
+    if (hasRun.current) return;
+    hasRun.current = true;
 
-    let currentStepIndex = 0;
-    let totalDuration = 0;
+    let pct = 0;
+    const ticker = setInterval(() => {
+      pct += 1;
+      setProgress(Math.min(pct, 95));
+      if (pct >= 95) clearInterval(ticker);
+    }, 120);
 
-    steps.forEach(step => {
-      totalDuration += step.duration;
+    analyzeCompliance(
+      {
+        projectId: project.id,
+        projectName: project.name,
+        projectDescription: project.description,
+        municipality: project.municipality,
+        projectType: project.project_type,
+        documentSummaries: ['Architectural Floor Plans', 'Structural Specifications', 'Site Plan'],
+      },
+      (step) => setCurrentStep(step)
+    ).then((checks) => {
+      clearInterval(ticker);
+      setProgress(100);
+      setTimeout(() => {
+        setComplianceChecks(checks);
+        setProcessing(false);
+      }, 400);
     });
 
-    const stepInterval = setInterval(() => {
-      if (currentStepIndex < steps.length) {
-        setCurrentStep(steps[currentStepIndex].text);
-        currentStepIndex++;
-      }
-    }, 2000);
-
-    const progressInterval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          clearInterval(stepInterval);
-          setProcessing(false);
-          // Load mock data
-          setComplianceChecks(mockComplianceChecks.filter(c => c.project_id === 'proj-1'));
-          return 100;
-        }
-        return prev + 2;
-      });
-    }, 200);
-
-    return () => {
-      clearInterval(progressInterval);
-      clearInterval(stepInterval);
-    };
-  }, []);
+    return () => clearInterval(ticker);
+  }, [project]);
 
   const getStatusBadgeClass = (status: ComplianceCheck['status']) => {
     switch (status) {
-      case 'pass':
-        return 'badge-success';
-      case 'fail':
-        return 'badge-error';
-      case 'warning':
-        return 'badge-warning';
-      case 'pending':
-        return 'badge-neutral';
-      default:
-        return 'badge-neutral';
+      case 'pass':    return 'badge-success';
+      case 'fail':    return 'badge-error';
+      case 'warning': return 'badge-warning';
+      case 'pending': return 'badge-neutral';
+      default:        return 'badge-neutral';
     }
   };
 
-  const getSeverityBadgeClass = (severity: ComplianceCheck['severity']) => {
+  const getSeverityClass = (severity: ComplianceCheck['severity']) => {
     switch (severity) {
-      case 'critical':
-        return 'severity-critical';
-      case 'major':
-        return 'severity-major';
-      case 'minor':
-        return 'severity-minor';
-      case 'info':
-        return 'severity-info';
-      default:
-        return 'severity-info';
+      case 'critical': return 'sev-critical';
+      case 'major':    return 'sev-major';
+      case 'minor':    return 'sev-minor';
+      default:         return 'sev-info';
     }
   };
 
-  const formatStatus = (status: ComplianceCheck['status']) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
+  const getCodeName = (id: string) =>
+    mockBuildingCodes.find(c => c.id === id)?.code_name ?? id;
 
-  const formatSeverity = (severity: ComplianceCheck['severity']) => {
-    return severity.charAt(0).toUpperCase() + severity.slice(1);
-  };
-
-  const getCodeName = (codeId: string) => {
-    const code = mockBuildingCodes.find(c => c.id === codeId);
-    return code?.code_name || 'Unknown Code';
-  };
-
-  const getStandardName = (standardId: string) => {
-    const standard = mockStandards.find(s => s.id === standardId);
-    return standard?.standard_name || 'Unknown Standard';
-  };
+  const getStandardName = (id: string) =>
+    mockStandards.find(s => s.id === id)?.standard_name ?? id;
 
   const summary = {
-    total: complianceChecks.length,
-    passed: complianceChecks.filter(c => c.status === 'pass').length,
-    failed: complianceChecks.filter(c => c.status === 'fail').length,
+    total:    complianceChecks.length,
+    passed:   complianceChecks.filter(c => c.status === 'pass').length,
+    failed:   complianceChecks.filter(c => c.status === 'fail').length,
     warnings: complianceChecks.filter(c => c.status === 'warning').length,
-    pending: complianceChecks.filter(c => c.status === 'pending').length,
+    pending:  complianceChecks.filter(c => c.status === 'pending').length,
   };
 
-  const overallStatus = summary.failed > 0 ? 'non-compliant' : 
-                        summary.pending > 0 ? 'needs-review' : 'compliant';
+  const overallStatus =
+    summary.failed > 0 ? 'non-compliant' :
+    summary.pending > 0 ? 'needs-review' : 'compliant';
 
+  const filtered =
+    activeFilter === 'all'
+      ? complianceChecks
+      : complianceChecks.filter(c => c.status === activeFilter);
+
+  const Header = () => (
+    <header className="app-header">
+      <div className="container app-header-inner">
+        <button className="app-logo" onClick={() => navigate('/dashboard')}>
+          <svg className="app-logo-icon" viewBox="0 0 100 100" fill="currentColor">
+            <rect x="20" y="10" width="60" height="80" rx="3" />
+            <rect x="30" y="25" width="10" height="10" fill="white" opacity="0.9" />
+            <rect x="45" y="25" width="10" height="10" fill="white" opacity="0.9" />
+            <rect x="60" y="25" width="10" height="10" fill="white" opacity="0.9" />
+            <rect x="30" y="40" width="10" height="10" fill="white" opacity="0.9" />
+            <rect x="45" y="40" width="10" height="10" fill="white" opacity="0.9" />
+            <rect x="60" y="40" width="10" height="10" fill="white" opacity="0.9" />
+            <rect x="30" y="55" width="10" height="10" fill="white" opacity="0.9" />
+            <rect x="45" y="55" width="10" height="10" fill="white" opacity="0.9" />
+            <rect x="60" y="55" width="10" height="10" fill="white" opacity="0.9" />
+          </svg>
+          <span className="app-logo-name">Permit<span>Flow</span></span>
+        </button>
+        <div className="header-user">
+          <span className="header-user-name">{user?.full_name}</span>
+          <button onClick={logout} className="btn btn-outline btn-sm">Sign Out</button>
+        </div>
+      </div>
+    </header>
+  );
+
+  /* ── Processing state ── */
   if (processing) {
     return (
       <div className="analysis-page">
-        <header className="dashboard-header">
-          <div className="container">
-            <div className="header-content">
-              <div className="header-left">
-                <div className="logo-icon-small">
-                  <svg viewBox="0 0 100 100" fill="currentColor">
-                    <rect x="20" y="10" width="60" height="80" rx="2" />
-                    <rect x="30" y="25" width="10" height="10" fill="white" />
-                    <rect x="45" y="25" width="10" height="10" fill="white" />
-                    <rect x="60" y="25" width="10" height="10" fill="white" />
-                    <rect x="30" y="40" width="10" height="10" fill="white" />
-                    <rect x="45" y="40" width="10" height="10" fill="white" />
-                    <rect x="60" y="40" width="10" height="10" fill="white" />
-                    <rect x="30" y="55" width="10" height="10" fill="white" />
-                    <rect x="45" y="55" width="10" height="10" fill="white" />
-                    <rect x="60" y="55" width="10" height="10" fill="white" />
-                  </svg>
-                </div>
-                <h2>PermitFlow</h2>
-              </div>
-              <div className="header-right">
-                <span className="user-name">{user?.full_name}</span>
-                <button onClick={logout} className="btn btn-outline btn-sm">
-                  Logout
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
-
+        <Header />
         <main className="analysis-main">
           <div className="container">
-            <div className="processing-container">
+            <div className="processing-wrapper">
               <div className="processing-card card">
-                <div className="processing-icon">
-                  <div className="spinner"></div>
+                <div className="processing-spinner">
+                  <div className="spinner-ring" />
                 </div>
-                <h2>Analyzing Your Project</h2>
-                <p className="text-muted mb-xl">
-                  Our AI system is reviewing your documents against applicable codes and standards
+                <h2>Analysing your submission</h2>
+                <p className="text-muted">
+                  PermitFlow is reviewing your documents against Ontario Building Code,
+                  {project.municipality} bylaws, and applicable standards.
                 </p>
 
-                <div className="progress-section">
-                  <div className="progress-bar-large">
-                    <div 
-                      className="progress-fill-large" 
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <div className="progress-info">
-                    <span className="progress-text-large">{progress}%</span>
-                    <span className="progress-step">{currentStep}</span>
-                  </div>
+                <div className="progress-track">
+                  <div className="progress-fill-bar" style={{ width: `${progress}%` }} />
+                </div>
+                <div className="progress-meta">
+                  <span className="progress-pct">{progress}%</span>
+                  <span className="progress-step-text">{currentStep}</span>
                 </div>
 
-                <div className="processing-steps">
-                  <div className="step-item">
-                    <div className="step-icon">✓</div>
-                    <span>OCR/CV Data Extraction</span>
-                  </div>
-                  <div className="step-item">
-                    <div className="step-icon">✓</div>
-                    <span>Code & Bylaw Database Query</span>
-                  </div>
-                  <div className="step-item">
-                    <div className={`step-icon ${progress >= 60 ? 'active' : ''}`}>
-                      {progress >= 80 ? '✓' : '⋯'}
+                <div className="analysis-steps">
+                  {[
+                    { label: 'Document extraction (OCR/CV)', threshold: 0 },
+                    { label: 'Code & bylaw database query', threshold: 25 },
+                    { label: 'AI / NLP rule engine', threshold: 50 },
+                    { label: 'Historical data cross-reference', threshold: 75 },
+                    { label: 'Generating compliance report', threshold: 90 },
+                  ].map(({ label, threshold }) => (
+                    <div key={label} className={`analysis-step ${progress > threshold ? 'step-active' : ''}`}>
+                      <div className="step-dot">
+                        {progress > threshold + 20 ? '✓' : ''}
+                      </div>
+                      <span>{label}</span>
                     </div>
-                    <span>AI/NLP Rule Engine Analysis</span>
-                  </div>
-                  <div className="step-item">
-                    <div className={`step-icon ${progress >= 80 ? 'active' : ''}`}>
-                      {progress >= 90 ? '✓' : '⋯'}
-                    </div>
-                    <span>Historical Data Cross-reference</span>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -205,154 +170,147 @@ const ProjectAnalysis = () => {
     );
   }
 
+  /* ── Results state ── */
   return (
     <div className="analysis-page">
-      <header className="dashboard-header">
-        <div className="container">
-          <div className="header-content">
-            <div className="header-left">
-              <div className="logo-icon-small">
-                <svg viewBox="0 0 100 100" fill="currentColor">
-                  <rect x="20" y="10" width="60" height="80" rx="2" />
-                  <rect x="30" y="25" width="10" height="10" fill="white" />
-                  <rect x="45" y="25" width="10" height="10" fill="white" />
-                  <rect x="60" y="25" width="10" height="10" fill="white" />
-                  <rect x="30" y="40" width="10" height="10" fill="white" />
-                  <rect x="45" y="40" width="10" height="10" fill="white" />
-                  <rect x="60" y="40" width="10" height="10" fill="white" />
-                  <rect x="30" y="55" width="10" height="10" fill="white" />
-                  <rect x="45" y="55" width="10" height="10" fill="white" />
-                  <rect x="60" y="55" width="10" height="10" fill="white" />
-                </svg>
-              </div>
-              <h2>PermitFlow</h2>
-            </div>
-            <div className="header-right">
-              <span className="user-name">{user?.full_name}</span>
-              <button onClick={logout} className="btn btn-outline btn-sm">
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+      <Header />
       <main className="analysis-main">
         <div className="container">
-          <div className="breadcrumb">
-            <button onClick={() => navigate('/dashboard')} className="breadcrumb-link">
-              Projects
-            </button>
-            <span className="breadcrumb-separator">/</span>
-            <span>Analysis Report</span>
-          </div>
 
-          <div className="report-header">
+          <nav className="breadcrumb">
+            <button className="breadcrumb-link" onClick={() => navigate('/dashboard')}>Projects</button>
+            <span className="breadcrumb-separator">/</span>
+            <span>{project.name}</span>
+          </nav>
+
+          {/* Report header */}
+          <div className="report-header-row">
             <div>
               <h1>Compliance Feedback Report</h1>
               <p className="text-muted">
-                Review the compliance analysis results for your project
+                {project.municipality} · {project.project_type}
               </p>
             </div>
-            <button 
-              onClick={() => navigate('/dashboard')}
-              className="btn btn-primary"
-            >
-              Back to Dashboard
-            </button>
+            <div className="report-header-actions">
+              <button className="btn btn-outline" onClick={() => window.print()}>
+                Export PDF
+              </button>
+              <button className="btn btn-primary" onClick={() => navigate('/dashboard')}>
+                Back to Projects
+              </button>
+            </div>
           </div>
 
-          <div className="summary-cards">
-            <div className={`summary-card card status-${overallStatus}`}>
-              <div className="summary-icon">
-                {overallStatus === 'compliant' ? '✓' : 
-                 overallStatus === 'non-compliant' ? '✕' : '⚠'}
+          {/* Summary cards */}
+          <div className="summary-row">
+            <div className={`summary-status-card card status-card-${overallStatus}`}>
+              <div className="status-indicator">
+                {overallStatus === 'compliant'     ? '✓' :
+                 overallStatus === 'non-compliant' ? '✕' : '!'}
               </div>
-              <h3>Overall Status</h3>
-              <p className="summary-status">
-                {overallStatus === 'compliant' ? 'Compliant' :
-                 overallStatus === 'non-compliant' ? 'Non-Compliant' : 'Needs Review'}
-              </p>
+              <div>
+                <div className="status-label">Overall Status</div>
+                <div className="status-value">
+                  {overallStatus === 'compliant'     ? 'Compliant' :
+                   overallStatus === 'non-compliant' ? 'Non-Compliant' : 'Needs Review'}
+                </div>
+              </div>
             </div>
 
-            <div className="summary-card card">
-              <div className="summary-number">{summary.total}</div>
-              <p className="text-muted">Total Checks</p>
-            </div>
-
-            <div className="summary-card card">
-              <div className="summary-number text-success">{summary.passed}</div>
-              <p className="text-muted">Passed</p>
-            </div>
-
-            <div className="summary-card card">
-              <div className="summary-number text-error">{summary.failed}</div>
-              <p className="text-muted">Failed</p>
-            </div>
-
-            <div className="summary-card card">
-              <div className="summary-number text-warning">{summary.warnings}</div>
-              <p className="text-muted">Warnings</p>
+            <div className="summary-metrics">
+              <div className="metric-card card-flat">
+                <div className="metric-number">{summary.total}</div>
+                <div className="metric-label">Total checks</div>
+              </div>
+              <div className="metric-card card-flat">
+                <div className="metric-number text-success">{summary.passed}</div>
+                <div className="metric-label">Passed</div>
+              </div>
+              <div className="metric-card card-flat">
+                <div className="metric-number text-error">{summary.failed}</div>
+                <div className="metric-label">Failed</div>
+              </div>
+              <div className="metric-card card-flat">
+                <div className="metric-number text-warning">{summary.warnings}</div>
+                <div className="metric-label">Warnings</div>
+              </div>
+              {summary.pending > 0 && (
+                <div className="metric-card card-flat">
+                  <div className="metric-number">{summary.pending}</div>
+                  <div className="metric-label">Pending</div>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="compliance-results card">
-            <h2 className="mb-lg">Compliance Checks</h2>
-            
-            <div className="compliance-list">
-              {complianceChecks.map((check) => (
-                <div key={check.id} className="compliance-item">
-                  <div className="compliance-header">
-                    <div className="compliance-title-section">
-                      <h3>{getCodeName(check.building_code_id)}</h3>
-                      <p className="text-muted">{check.requirement_text}</p>
-                    </div>
-                    <div className="compliance-badges">
-                      <span className={`badge ${getStatusBadgeClass(check.status)}`}>
-                        {formatStatus(check.status)}
-                      </span>
-                      <span className={`badge ${getSeverityBadgeClass(check.severity)}`}>
-                        {formatSeverity(check.severity)}
-                      </span>
-                    </div>
+          {/* Filter tabs */}
+          <div className="filter-tabs">
+            {(['all', 'fail', 'warning', 'pass', 'pending'] as const).map(f => (
+              <button
+                key={f}
+                className={`filter-tab ${activeFilter === f ? 'active' : ''}`}
+                onClick={() => setActiveFilter(f)}
+              >
+                {f === 'all' ? `All (${summary.total})` :
+                 f === 'fail' ? `Failed (${summary.failed})` :
+                 f === 'warning' ? `Warnings (${summary.warnings})` :
+                 f === 'pass' ? `Passed (${summary.passed})` :
+                 `Pending (${summary.pending})`}
+              </button>
+            ))}
+          </div>
+
+          {/* Compliance checks list */}
+          <div className="checks-list">
+            {filtered.map((check) => (
+              <div key={check.id} className={`check-card card check-${check.status}`}>
+                <div className="check-header">
+                  <div className="check-title-group">
+                    <div className="check-code-name">{getCodeName(check.building_code_id)}</div>
+                    <div className="check-requirement">{check.requirement_text}</div>
                   </div>
-
-                  <div className="compliance-body">
-                    <div className="compliance-row">
-                      <span className="compliance-label">Standard:</span>
-                      <span className="compliance-value">{getStandardName(check.standard_id)}</span>
-                    </div>
-                    
-                    <div className="compliance-row">
-                      <span className="compliance-label">Feedback:</span>
-                      <span className="compliance-value">{check.feedback}</span>
-                    </div>
-
-                    {check.suggested_fix && (
-                      <div className="compliance-fix">
-                        <span className="compliance-label">💡 Suggested Fix:</span>
-                        <span className="compliance-value">{check.suggested_fix}</span>
-                      </div>
-                    )}
+                  <div className="check-badges">
+                    <span className={`badge ${getStatusBadgeClass(check.status)}`}>
+                      {check.status.charAt(0).toUpperCase() + check.status.slice(1)}
+                    </span>
+                    <span className={`sev-badge ${getSeverityClass(check.severity)}`}>
+                      {check.severity.charAt(0).toUpperCase() + check.severity.slice(1)}
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                <div className="check-body">
+                  <div className="check-detail-row">
+                    <span className="check-detail-label">Standard</span>
+                    <span className="check-detail-value">{getStandardName(check.standard_id)}</span>
+                  </div>
+                  <div className="check-detail-row">
+                    <span className="check-detail-label">Finding</span>
+                    <span className="check-detail-value">{check.feedback}</span>
+                  </div>
+                  {check.suggested_fix && (
+                    <div className="check-fix">
+                      <span className="check-fix-icon">→</span>
+                      <div>
+                        <span className="check-fix-label">Suggested remediation</span>
+                        <p className="check-fix-text">{check.suggested_fix}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {filtered.length === 0 && (
+              <div className="no-results card">
+                <p className="text-muted">No checks matching this filter.</p>
+              </div>
+            )}
           </div>
 
-          <div className="report-actions">
-            <button 
-              onClick={() => window.print()}
-              className="btn btn-outline"
-            >
-              Export Report
-            </button>
-            <button 
-              onClick={() => navigate('/dashboard')}
-              className="btn btn-primary"
-            >
-              Complete Review
-            </button>
+          <div className="report-footer-actions">
+            <button className="btn btn-outline" onClick={() => window.print()}>Export PDF</button>
+            <button className="btn btn-primary" onClick={() => navigate('/dashboard')}>Complete Review</button>
           </div>
         </div>
       </main>

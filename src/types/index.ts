@@ -18,6 +18,8 @@ export interface Project {
   user_id: string;
   name: string;
   description: string;
+  municipality: string;
+  project_type: string;
   status: 'draft' | 'processing' | 'completed' | 'under_review';
   created_at: string;
   updated_at: string;

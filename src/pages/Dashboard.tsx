@@ -10,124 +10,143 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [projects] = useState<Project[]>(mockProjects);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
   const getStatusBadgeClass = (status: Project['status']) => {
     switch (status) {
-      case 'completed':
-        return 'badge-success';
-      case 'processing':
-        return 'badge-info';
-      case 'under_review':
-        return 'badge-warning';
-      case 'draft':
-        return 'badge-neutral';
-      default:
-        return 'badge-neutral';
+      case 'completed':   return 'badge-success';
+      case 'processing':  return 'badge-info';
+      case 'under_review':return 'badge-warning';
+      case 'draft':       return 'badge-neutral';
+      default:            return 'badge-neutral';
     }
   };
 
-  const formatStatus = (status: Project['status']) => {
-    return status.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-  };
+  const formatStatus = (status: Project['status']) =>
+    status.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+  const formatDate = (ds: string) =>
+    new Date(ds).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' });
+
+  const statusCounts = {
+    total: projects.length,
+    completed: projects.filter(p => p.status === 'completed').length,
+    processing: projects.filter(p => p.status === 'processing').length,
+    draft: projects.filter(p => p.status === 'draft').length,
   };
 
   return (
-    <div className="dashboard">
-      <header className="dashboard-header">
-        <div className="container">
-          <div className="header-content">
-            <div className="header-left">
-              <div className="logo-icon-small">
-                <svg viewBox="0 0 100 100" fill="currentColor">
-                  <rect x="20" y="10" width="60" height="80" rx="2" />
-                  <rect x="30" y="25" width="10" height="10" fill="white" />
-                  <rect x="45" y="25" width="10" height="10" fill="white" />
-                  <rect x="60" y="25" width="10" height="10" fill="white" />
-                  <rect x="30" y="40" width="10" height="10" fill="white" />
-                  <rect x="45" y="40" width="10" height="10" fill="white" />
-                  <rect x="60" y="40" width="10" height="10" fill="white" />
-                  <rect x="30" y="55" width="10" height="10" fill="white" />
-                  <rect x="45" y="55" width="10" height="10" fill="white" />
-                  <rect x="60" y="55" width="10" height="10" fill="white" />
-                </svg>
-              </div>
-              <h2>PermitFlow</h2>
-            </div>
-            <div className="header-right">
-              <span className="user-name">{user?.full_name}</span>
-              <button onClick={handleLogout} className="btn btn-outline btn-sm">
-                Logout
-              </button>
-            </div>
+    <div className="dashboard-page">
+      {/* ── Header ──────────────────────────────────────── */}
+      <header className="app-header">
+        <div className="container app-header-inner">
+          <div className="app-logo">
+            <svg className="app-logo-icon" viewBox="0 0 100 100" fill="currentColor">
+              <rect x="20" y="10" width="60" height="80" rx="3" />
+              <rect x="30" y="25" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="45" y="25" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="60" y="25" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="30" y="40" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="45" y="40" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="60" y="40" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="30" y="55" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="45" y="55" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="60" y="55" width="10" height="10" fill="white" opacity="0.9" />
+            </svg>
+            <span className="app-logo-name">Permit<span>Flow</span></span>
+          </div>
+          <div className="header-user">
+            <span className="header-user-name">{user?.full_name}</span>
+            <button onClick={() => { logout(); navigate('/'); }} className="btn btn-outline btn-sm">
+              Sign Out
+            </button>
           </div>
         </div>
       </header>
 
+      {/* ── Main ────────────────────────────────────────── */}
       <main className="dashboard-main">
         <div className="container">
-          <div className="dashboard-title-section">
+
+          {/* Page title row */}
+          <div className="dashboard-title-row">
             <div>
               <h1>Projects</h1>
-              <p className="text-muted">Manage your permit applications</p>
+              <p className="text-muted">Manage your permit compliance reviews</p>
             </div>
-            <button 
-              onClick={() => navigate('/project/new')}
-              className="btn btn-primary"
-            >
+            <button className="btn btn-primary" onClick={() => navigate('/project/new')}>
               + New Project
             </button>
           </div>
 
-          <div className="projects-grid">
-            {projects.length === 0 ? (
-              <div className="empty-state card">
-                <div className="empty-icon">📋</div>
-                <h3>No projects yet</h3>
-                <p className="text-muted">Create your first project to get started</p>
-                <button 
-                  onClick={() => navigate('/project/new')}
-                  className="btn btn-primary mt-lg"
-                >
-                  Create Project
-                </button>
+          {/* Summary stats */}
+          <div className="dashboard-stats">
+            <div className="dash-stat card-flat">
+              <div className="dash-stat-number">{statusCounts.total}</div>
+              <div className="dash-stat-label">Total projects</div>
+            </div>
+            <div className="dash-stat card-flat">
+              <div className="dash-stat-number text-success">{statusCounts.completed}</div>
+              <div className="dash-stat-label">Completed</div>
+            </div>
+            <div className="dash-stat card-flat">
+              <div className="dash-stat-number text-warning">{statusCounts.processing}</div>
+              <div className="dash-stat-label">In progress</div>
+            </div>
+            <div className="dash-stat card-flat">
+              <div className="dash-stat-number">{statusCounts.draft}</div>
+              <div className="dash-stat-label">Drafts</div>
+            </div>
+          </div>
+
+          {/* Project list */}
+          {projects.length === 0 ? (
+            <div className="empty-state card">
+              <div className="empty-icon">◫</div>
+              <h3>No projects yet</h3>
+              <p className="text-muted">Create your first compliance review to get started</p>
+              <button
+                className="btn btn-primary mt-lg"
+                onClick={() => navigate('/project/new')}
+              >
+                Create Project
+              </button>
+            </div>
+          ) : (
+            <div className="project-table card">
+              <div className="project-table-header">
+                <span>Project</span>
+                <span>Municipality</span>
+                <span>Type</span>
+                <span>Status</span>
+                <span>Updated</span>
+                <span />
               </div>
-            ) : (
-              projects.map((project) => (
-                <div 
-                  key={project.id} 
-                  className="project-card card"
+              {projects.map((project) => (
+                <div
+                  key={project.id}
+                  className="project-table-row"
                   onClick={() => navigate(`/project/${project.id}`)}
                 >
-                  <div className="project-card-header">
-                    <h3>{project.name}</h3>
+                  <div className="project-name-cell">
+                    <div className="project-name">{project.name}</div>
+                    <div className="project-desc">{project.description}</div>
+                  </div>
+                  <div className="project-cell">{project.municipality}</div>
+                  <div className="project-cell project-type-cell">{project.project_type}</div>
+                  <div className="project-cell">
                     <span className={`badge ${getStatusBadgeClass(project.status)}`}>
                       {formatStatus(project.status)}
                     </span>
                   </div>
-                  <p className="project-description">{project.description}</p>
-                  <div className="project-card-footer">
-                    <span className="project-date">
-                      Updated: {formatDate(project.updated_at)}
-                    </span>
-                    <span className="project-link">View Details →</span>
+                  <div className="project-cell project-date-cell">
+                    {formatDate(project.updated_at)}
+                  </div>
+                  <div className="project-cell project-action-cell">
+                    <span className="project-view-link">View →</span>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

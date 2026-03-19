@@ -1,145 +1,144 @@
 .upload-page {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--color-background);
+  background: var(--color-background);
 }
 
 .upload-main {
-  flex: 1;
-  padding: var(--spacing-2xl) 0;
+  padding: var(--space-8) 0 var(--space-16);
 }
 
 .upload-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .upload-header {
-  margin-bottom: var(--spacing-2xl);
+  margin-bottom: var(--space-8);
 }
 
 .upload-header h1 {
-  margin-bottom: var(--spacing-sm);
+  font-size: 1.75rem;
+  letter-spacing: -0.025em;
+  margin-bottom: var(--space-2);
 }
 
 .upload-sections {
   display: grid;
-  gap: var(--spacing-xl);
-  margin-bottom: var(--spacing-2xl);
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
 }
 
+/* ── Section card ────────────────────────────────────────────────── */
 .upload-section {
-  padding: var(--spacing-xl);
+  padding: var(--space-5);
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--spacing-lg);
-  gap: var(--spacing-md);
+  margin-bottom: var(--space-4);
+  gap: var(--space-3);
 }
 
 .section-header h3 {
-  margin-bottom: var(--spacing-xs);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: var(--space-1);
 }
 
+.section-header p {
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+/* ── Drop zone ───────────────────────────────────────────────────── */
 .upload-zone {
-  border: 2px dashed var(--color-border);
+  border: 1.5px dashed var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-2xl);
+  padding: var(--space-6) var(--space-4);
   text-align: center;
-  background-color: var(--color-background);
-  transition: all 0.3s ease;
+  background: var(--color-slate-50);
+  transition: all 0.15s ease;
   cursor: pointer;
 }
 
 .upload-zone:hover {
   border-color: var(--color-primary);
-  background-color: rgba(139, 47, 91, 0.02);
+  background: var(--color-primary-subtle);
 }
 
 .upload-zone.drag-active {
   border-color: var(--color-primary);
-  background-color: rgba(139, 47, 91, 0.05);
+  background: var(--color-primary-subtle);
   transform: scale(1.01);
 }
 
-.file-input {
-  display: none;
-}
+.file-input { display: none; }
 
 .upload-label {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--space-2);
   cursor: pointer;
 }
 
 .upload-icon {
-  font-size: 3rem;
-  margin-bottom: var(--spacing-sm);
-  opacity: 0.6;
+  font-size: 1.75rem;
+  opacity: 0.5;
 }
 
 .upload-text {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-text);
 }
 
 .upload-hint {
-  font-size: 0.875rem;
-  color: var(--color-text-light);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
 }
 
+/* ── File list ───────────────────────────────────────────────────── */
 .file-list {
-  margin-top: var(--spacing-lg);
+  margin-top: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--space-2);
 }
 
 .file-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-md);
-  background-color: var(--color-surface);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-}
-
-.file-item:hover {
-  border-color: var(--color-primary-lighter);
-  box-shadow: var(--shadow-sm);
 }
 
 .file-info {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--space-3);
   flex: 1;
   min-width: 0;
 }
 
-.file-icon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
-}
+.file-icon { font-size: 1.25rem; flex-shrink: 0; }
 
 .file-details {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: 2px;
   min-width: 0;
   flex: 1;
 }
 
 .file-name {
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-text);
   overflow: hidden;
@@ -148,94 +147,72 @@
 }
 
 .file-size {
-  font-size: 0.875rem;
-  color: var(--color-text-light);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
 }
 
 .file-progress {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  width: 200px;
+  gap: var(--space-3);
+  width: 160px;
 }
 
 .progress-bar {
   flex: 1;
-  height: 6px;
-  background-color: var(--color-border);
-  border-radius: 3px;
+  height: 4px;
+  background: var(--color-slate-200);
+  border-radius: 2px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-  transition: width 0.3s ease;
+  background: var(--color-primary);
+  transition: width 0.2s ease;
 }
 
 .progress-text {
-  font-size: 0.875rem;
-  color: var(--color-text-light);
-  min-width: 40px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  min-width: 32px;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .btn-remove {
   background: none;
   border: none;
-  color: var(--color-text-lighter);
-  font-size: 1.25rem;
+  color: var(--color-text-muted);
+  font-size: 1rem;
   cursor: pointer;
-  padding: var(--spacing-xs);
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
+  transition: all 0.15s;
+  flex-shrink: 0;
 }
 
 .btn-remove:hover {
-  background-color: rgba(229, 62, 62, 0.1);
+  background: var(--color-error-bg);
   color: var(--color-error);
 }
 
+/* ── Actions ─────────────────────────────────────────────────────── */
 .upload-actions {
   display: flex;
   justify-content: flex-end;
-  gap: var(--spacing-md);
-  padding-top: var(--spacing-xl);
+  gap: var(--space-3);
+  padding-top: var(--space-6);
   border-top: 1px solid var(--color-border);
 }
 
+/* ── Responsive ──────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .upload-container {
-    max-width: 100%;
-  }
-
-  .upload-section {
-    padding: var(--spacing-lg);
-  }
-
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .upload-zone {
-    padding: var(--spacing-lg);
-  }
-
-  .file-progress {
-    width: 150px;
-  }
-
-  .upload-actions {
-    flex-direction: column-reverse;
-  }
-
-  .upload-actions button {
-    width: 100%;
-  }
+  .upload-sections { grid-template-columns: 1fr; }
+  .upload-actions { flex-direction: column-reverse; }
+  .upload-actions button { width: 100%; }
 }

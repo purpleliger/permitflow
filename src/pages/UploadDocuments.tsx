@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import type { ChangeEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './UploadDocuments.css';
@@ -102,49 +101,39 @@ const UploadDocuments = () => {
 
   return (
     <div className="upload-page">
-      <header className="dashboard-header">
-        <div className="container">
-          <div className="header-content">
-            <div className="header-left">
-              <div className="logo-icon-small">
-                <svg viewBox="0 0 100 100" fill="currentColor">
-                  <rect x="20" y="10" width="60" height="80" rx="2" />
-                  <rect x="30" y="25" width="10" height="10" fill="white" />
-                  <rect x="45" y="25" width="10" height="10" fill="white" />
-                  <rect x="60" y="25" width="10" height="10" fill="white" />
-                  <rect x="30" y="40" width="10" height="10" fill="white" />
-                  <rect x="45" y="40" width="10" height="10" fill="white" />
-                  <rect x="60" y="40" width="10" height="10" fill="white" />
-                  <rect x="30" y="55" width="10" height="10" fill="white" />
-                  <rect x="45" y="55" width="10" height="10" fill="white" />
-                  <rect x="60" y="55" width="10" height="10" fill="white" />
-                </svg>
-              </div>
-              <h2>PermitFlow</h2>
-            </div>
-            <div className="header-right">
-              <span className="user-name">{user?.full_name}</span>
-              <button onClick={logout} className="btn btn-outline btn-sm">
-                Logout
-              </button>
-            </div>
+      <header className="app-header">
+        <div className="container app-header-inner">
+          <button className="app-logo" onClick={() => navigate('/dashboard')}>
+            <svg className="app-logo-icon" viewBox="0 0 100 100" fill="currentColor">
+              <rect x="20" y="10" width="60" height="80" rx="3" />
+              <rect x="30" y="25" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="45" y="25" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="60" y="25" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="30" y="40" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="45" y="40" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="60" y="40" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="30" y="55" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="45" y="55" width="10" height="10" fill="white" opacity="0.9" />
+              <rect x="60" y="55" width="10" height="10" fill="white" opacity="0.9" />
+            </svg>
+            <span className="app-logo-name">Permit<span>Flow</span></span>
+          </button>
+          <div className="header-user">
+            <span className="header-user-name">{user?.full_name}</span>
+            <button onClick={logout} className="btn btn-outline btn-sm">Sign Out</button>
           </div>
         </div>
       </header>
 
       <main className="upload-main">
         <div className="container">
-          <div className="breadcrumb">
-            <button onClick={() => navigate('/dashboard')} className="breadcrumb-link">
-              Projects
-            </button>
+          <nav className="breadcrumb">
+            <button onClick={() => navigate('/dashboard')} className="breadcrumb-link">Projects</button>
             <span className="breadcrumb-separator">/</span>
-            <button onClick={() => navigate('/project/new')} className="breadcrumb-link">
-              New Project
-            </button>
+            <button onClick={() => navigate('/project/new')} className="breadcrumb-link">New Project</button>
             <span className="breadcrumb-separator">/</span>
             <span>Upload Documents</span>
-          </div>
+          </nav>
 
           <div className="upload-container">
             <div className="upload-header">
